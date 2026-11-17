@@ -185,7 +185,24 @@ export default function GoogleSheetsIntegrationsClient() {
   }
 
   useEffect(() => {
-    void load();
+    let active = true;
+    const loadIntegrations = async () => {
+      try {
+        const response = await fetch("/api/integrations/google-sheets", { cache: "no-store" });
+        const payload = await response.json();
+        if (!response.ok) throw new Error(payload.error ?? "Unable to load integrations.");
+        if (active) setIntegrations(payload.data ?? []);
+      } catch (err) {
+        if (active) setError(err instanceof Error ? err.message : "Unable to load integrations.");
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    void loadIntegrations();
+    return () => {
+      active = false;
+    };
   }, []);
 
   function parseMapping(text: string): Record<string, string> {
