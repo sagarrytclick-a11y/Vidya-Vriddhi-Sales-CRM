@@ -5,11 +5,41 @@ import { googleSheetSyncRequestSchema } from "@/lib/validators";
 
 export const dynamic = "force-dynamic";
 
+const corsHeaders = {
+  "access-control-allow-origin": "*",
+  "access-control-allow-methods": "GET, POST, OPTIONS",
+  "access-control-allow-headers": "content-type, x-webhook-secret, authorization",
+};
+
+function withCors(response: NextResponse) {
+  for (const [key, value] of Object.entries(corsHeaders)) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
+
+export async function GET() {
+  return withCors(
+    jsonData({
+      ok: true,
+      message:
+        "Google Sheets webhook is active. Send a POST request with integrationId, secret, eventType, and records.",
+      methods: ["POST"],
+    }),
+  );
+}
+
 export async function POST(request: Request) {
-  const body = await readJson(request);
+  let body: unknown;
+  try {
+    body = await readJson(request);
+  } catch {
+    return withCors(jsonError("Invalid or empty JSON body.", 400));
+  }
+
   const parsed = googleSheetSyncRequestSchema.safeParse(body);
   if (!parsed.success) {
-    return jsonError(parsed.error.issues[0]?.message ?? "Invalid sync payload.", 400);
+    return withCors(jsonError(parsed.error.issues[0]?.message ?? "Invalid sync payload.", 400));
   }
 
   const secret =
@@ -18,7 +48,7 @@ export async function POST(request: Request) {
     parsed.data.secret;
 
   if (!secret) {
-    return jsonError("Webhook secret is required.", 401);
+    return withCors(jsonError("Webhook secret is required.", 401));
   }
 
   const ipAddress =
@@ -33,19 +63,15 @@ export async function POST(request: Request) {
       payload: parsed.data,
       ipAddress,
     });
-    return jsonData(summary, summary.status === "failed" ? 400 : 200);
+    return withCors(jsonData(summary, summary.status === "failed" ? 422 : 200));
   } catch (error) {
-    return handleApiError(error);
+    return withCors(handleApiError(error));
   }
 }
 
 export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
-    headers: {
-      "access-control-allow-origin": "*",
-      "access-control-allow-methods": "POST, OPTIONS",
-      "access-control-allow-headers": "content-type, x-webhook-secret, authorization",
-    },
+    headers: corsHeaders,
   });
 }

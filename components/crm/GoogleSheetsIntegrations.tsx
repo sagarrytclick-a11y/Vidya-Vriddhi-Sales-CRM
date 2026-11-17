@@ -49,13 +49,10 @@ export default function GoogleSheetsIntegrationsClient() {
   const [selectedIntegration, setSelectedIntegration] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const [newSecret, setNewSecret] = useState<string | null>(null);
-  const [webhookUrl, setWebhookUrl] = useState("");
+  const [webhookUrl, setWebhookUrl] = useState("/api/integrations/google-sheets/webhook");
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setWebhookUrl(`${window.location.origin}/api/integrations/google-sheets/webhook`);
-    }, 0);
-    return () => clearTimeout(timer);
+    setWebhookUrl(`${window.location.origin}/api/integrations/google-sheets/webhook`);
   }, []);
 
   async function load() {
@@ -283,7 +280,7 @@ export default function GoogleSheetsIntegrationsClient() {
           <p className="mt-1 text-xs leading-5 text-amber-800">
             Store this in Google Apps Script Script Properties as WEBHOOK_SECRET. It will not be shown again.
           </p>
-          <code className="mt-3 block break-all rounded-xl bg-white px-3 py-2 text-xs text-slate-900">{newSecret}</code>
+          <code className="mt-3 block break-all rounded-xl border border-amber-200 bg-slate-50 px-3 py-2 text-xs text-slate-900">{newSecret}</code>
         </div>
       ) : null}
 
@@ -345,7 +342,7 @@ export default function GoogleSheetsIntegrationsClient() {
                 </div>
 
                 {selectedIntegration === integration.id ? (
-                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                  <div className="mt-4 rounded-xl border border-slate-200 bg-slate-100 p-4">
                     <div className="flex items-center justify-between">
                       <h4 className="text-xs font-semibold uppercase tracking-wider text-slate-500">Recent sync logs</h4>
                       <button type="button" className="text-xs font-medium text-orange-700" onClick={() => { setSelectedIntegration(null); setSelectedLogs([]); }}>
@@ -357,7 +354,7 @@ export default function GoogleSheetsIntegrationsClient() {
                     ) : (
                       <div className="mt-3 space-y-3">
                         {selectedLogs.map((log) => (
-                          <div key={log.id} className="rounded-xl bg-white p-3 text-xs text-slate-600">
+                          <div key={log.id} className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
                             <div className="flex flex-wrap items-center gap-2">
                               <span className="font-medium text-slate-900">{log.eventType}</span>
                               <span className={`badge ${log.status === "success" ? "border-emerald-200 bg-emerald-50 text-emerald-700" : log.status === "partial" ? "border-amber-200 bg-amber-50 text-amber-700" : "border-rose-200 bg-rose-50 text-rose-700"}`}>
@@ -397,7 +394,7 @@ export default function GoogleSheetsIntegrationsClient() {
         <p className="mt-1 text-xs leading-5 text-slate-500">
           Google Apps Script should POST to this endpoint with the integration ID and webhook secret.
         </p>
-        <code className="mt-3 block break-all rounded-xl bg-slate-900 px-3 py-2 text-xs text-white">
+        <code className="mt-3 block break-all rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-900" suppressHydrationWarning>
           {webhookUrl}
         </code>
       </div>
